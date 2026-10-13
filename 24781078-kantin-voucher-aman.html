@@ -52,7 +52,7 @@ body {
   border: 1px solid var(--border);
 }
 
-/* ── Header ─�� */
+/* ── Header ── */
 .header {
   padding: 16px 20px;
   display: flex;
@@ -557,9 +557,43 @@ function showTyping() {
   chat.scrollTop = chat.scrollHeight;
 }
 
+// Simulasi Model Offline — versi AMAN, menolak semua injeksi
+async function llmSimulasi(messages) {
+  // Ambil konten pesan user (bisa dari string langsung atau array messages)
+  const userText = Array.isArray(messages)
+    ? (messages.find(m => m.role === "user")?.content || "")
+    : (typeof messages === "string" ? messages : "");
+
+  // Deteksi percobaan injeksi — DITOLAK dengan pesan aman
+  if (/kamu kasir|diskon 100%|abaikan aturan|ignore previous|jailbreak|bypass|override/i.test(userText)) {
+    return "Maaf, saya hanya dapat membantu informasi seputar menu dan harga kantin. " +
+      "Permintaan Anda tidak dapat diproses — silakan hubungi kasir di loket koperasi secara langsung.";
+  }
+  if (/harga nasi goreng/i.test(userText)) {
+    return "Harga nasi goreng di kantin koperasi adalah Rp 12.000 per porsi.";
+  }
+  if (/harga es teh/i.test(userText)) {
+    return "Harga es teh adalah Rp 4.000.";
+  }
+  if (/harga mie ayam/i.test(userText)) {
+    return "Harga mie ayam adalah Rp 10.000.";
+  }
+  if (/harga jus jeruk/i.test(userText)) {
+    return "Harga jus jeruk adalah Rp 8.000.";
+  }
+  if (/menu/i.test(userText)) {
+    return "Menu hari ini: Nasi Goreng Rp 12.000, Es Teh Rp 4.000, Mie Ayam Rp 10.000, Jus Jeruk Rp 8.000.";
+  }
+  return "Halo! Ada yang bisa saya bantu mengenai menu atau harga di kantin koperasi?";
+}
+
 async function llmAsli(messages) {
   const key = document.getElementById("key").value || bacaKey();
   simpanKey(key);
+  if (!key) {
+    // Tidak ada API key — gunakan simulasi offline yang aman
+    return llmSimulasi(messages);
+  }
   LOG.model = "openai/gpt-4o-mini";
   const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
     method: "POST",
